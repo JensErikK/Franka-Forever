@@ -1,6 +1,7 @@
 from frankapy import FrankaArm
 import numpy as np
 from autolab_core import RigidTransform
+from time import sleep
 
 def subsample(data, rate=0.1):
     idx = np.random.choice(np.arange(len(data)), size=int(rate * len(data)))
@@ -39,4 +40,25 @@ if __name__ == "__main__":
 
 
     T_ready_world = fa.get_pose()
-    T_ball_world = np.eye(4,4)
+    T_ball_world = RigidTransform(
+        rotation= np.eye(3),
+        translation= np.array([0.45108569, 0.07067022, 0.03280668]),
+        from_frame= 'franka_tool_base',
+        to_frame= 'world'
+    )
+
+    print('Finding closest orthogonal grasp')
+    T_grasp_world = get_closest_grasp_pose(T_ball_world, T_ready_world)
+    T_lift = RigidTransform(translation=[0, 0, 0.2], from_frame=T_ready_world.to_frame, to_frame=T_ready_world.to_frame)
+    T_lift_world = T_lift * T_grasp_world
+
+    print('Commanding robot')
+    fa.goto_pose(T_lift_world, use_impedance=False)
+    fa.goto_pose(T_grasp_world, use_impedance=False)
+    fa.close_gripper()
+    fa.goto_pose(T_lift_world, use_impedance=False)
+    sleep(3)
+    fa.goto_pose(T_grasp_world, use_impedance=False)
+    fa.open_gripper()
+    fa.goto_pose(T_lift_world, use_impedance=False)
+    fa.goto_pose(T_ready_world, use_impedance=False)

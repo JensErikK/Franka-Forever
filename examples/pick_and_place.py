@@ -23,7 +23,7 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
     grasp_z_axis = np.array([0, 0, -1])
     grasp_y_axis = np.cross(grasp_z_axis, grasp_x_axis)
     grasp_R = make_det_one(np.c_[grasp_x_axis, grasp_y_axis, grasp_z_axis])
-    grasp_translation = T_tag_world.translation + np.array([0, 0, -cfg['cube_size'] / 2])
+    grasp_translation = T_tag_world.translation + np.array([0, 0, 5 / 2])
     return RigidTransform(
         rotation=grasp_R,
         translation=grasp_translation,

@@ -32,13 +32,11 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
 
 
 def pickUp(robot, x, y):
-    robot.reset_pose()
-    robot.open_gripper()
 
     T_ready_world = robot.get_pose()
     T_ball_world = RigidTransform(
         rotation= np.eye(3),
-        translation= np.array([x, y, 0.02880668]),
+        translation= np.array([x, y, 0.02]),
         from_frame= 'franka_tool_base',
         to_frame= 'world'
     )
@@ -53,36 +51,45 @@ def pickUp(robot, x, y):
 
     print(T_lift_world)
 
-    robot.goto_pose(T_lift_world, use_impedance=False)
-    robot.goto_pose(T_grasp_world, use_impedance=False)
+    robot.goto_pose(T_lift_world, duration=2, use_impedance=False)
+
+    robot.open_gripper()
+
+    robot.goto_pose(T_grasp_world, duration=2, use_impedance=False)
     robot.close_gripper()
-    robot.reset_pose()
+    robot.reset_pose(duration=2)
 
 
 def place(robot, x, y):
-    robot.reset_pose()
 
     T_ready_world = robot.get_pose()
     T_ball_world = RigidTransform(
         rotation= np.eye(3),
-        translation= np.array([x, y, 0.02880668]),
+        translation= np.array([x, y, 0.03]),
         from_frame= 'franka_tool_base',
         to_frame= 'world'
     )
-
 
     T_grasp_world = get_closest_grasp_pose(T_ball_world, T_ready_world)
 
     robot.goto_pose(T_grasp_world, use_impedance=False)
     robot.open_gripper()
-    robot.reset_pose()
+    robot.reset_pose(duration=2)
 
 
 def pick_and_place(x_from, y_from, x_to, y_to):
     fa = FrankaArm()
+    fa.reset_pose(duration=2)
     pickUp(fa, x_from, y_from)
     place(fa, x_to, y_to)
 
 
 if __name__ == "__main__":
-    pick_and_place(0.45108569, 0.07067022, 0.45108569, 0.0)
+
+    start = (0.45108569+0.10, 0.07067022)
+    target = (0.45108569 - 0.05, 0.07067022)
+
+    while (True):
+        pick_and_place(start[0], start[1], target[0], target[1])
+        start, target = target, start
+        

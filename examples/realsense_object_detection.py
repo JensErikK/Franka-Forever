@@ -8,7 +8,7 @@ Path_to_cpth = "faster_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.
 
 Path_to_pptxt = "faster_rcnn_inception_v2_coco_2018_01_28/mscoco_label_map.pbtxt"
 
-    
+
 def load_label_map(label_map_path):
     label_map = {}
     with open(label_map_path, 'r') as file:
@@ -59,13 +59,33 @@ if __name__ == '__main__':
     #Starting camear capturing
     pipeline = rs.pipeline()
     config = rs.config()
+    config.enable_stream(rs.stream.depth)
     config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
 
     #Starting camera
     pipeline.start(config)
 
+    # Get the intrinsics of the color stream
+    profile = pipeline.get_active_profile()
+    color_profile = rs.video_stream_profile(profile.get_stream(rs.stream.color))
+    intrinsics = color_profile.get_intrinsics()
+
+    #Getting a frame for depth
+    align_to = rs.stream.color
+    align = rs.align(align_to)
+
     #Get data
     frames = pipeline.wait_for_frames()
+    aligned_frames = align.process(frames)
+
+    aligned_depth_frame = aligned_frames.get_depth_frame()
+    color_frame = aligned_frames.get_color_frame()
+
+    if not aligned_depth_frame or not color_frame:
+        print("Didnt get frame")
+    
+    depth_image = np.asanyarray(aligned_depth_frame.get_data())
+
     color_frame = frames.get_color_frame()
     color_image = np.asanyarray(color_frame.get_data())
     expanded_image = color_image[np.newaxis, ...]
@@ -92,6 +112,18 @@ if __name__ == '__main__':
             right = box[3] * W
             bottom = box[2] * H
 
+            #finding center of object
+            center_x = int((left + right) // 2)
+            center_y = int((top + bottom) // 2)
+            pixel = [center_x, center_y]
+            print(pixel) 
+            depth = depth_image[center_y, center_x]
+            print(depth)
+
+            point = rs.rs2_deproject_pixel_to_point(intrinsics, pixel, depth)
+
+            print(point)
+
             width = right - left
             height = bottom - top
             bbox = (int(left), int(top), int(width), int(height))
@@ -104,9 +136,12 @@ if __name__ == '__main__':
             label = f'{class_name}: {score:.2f}'
             cv2.putText(color_image, label, (p1[0], p1[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (int(r), int(g), int(b)), 2)
 
+    depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
     # Display the image
     cv2.imshow('Detected Objects', color_image)
+
+    cv2.imshow('RealSense Depth Image', depth_colormap)
 
     # Wait for a key press and then close all open windows
     cv2.waitKey(0)

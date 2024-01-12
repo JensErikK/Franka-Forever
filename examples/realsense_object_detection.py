@@ -4,11 +4,33 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 
-
-
 Path_to_cpth = "faster_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb" 
 
+Path_to_pptxt = "faster_rcnn_inception_v2_coco_2018_01_28/mscoco_label_map.pbtxt"
+
+    
+def load_label_map(label_map_path):
+    label_map = {}
+    with open(label_map_path, 'r') as file:
+        lines = file.readlines()
+        for i in range(0, len(lines), 5):  # Process each item block
+            id_line = lines[i+2].strip()  # Get the line with the id
+            display_name_line = lines[i+3].strip()  # Get the line with the display_name
+
+            # Extract the id number
+            id_ = int(id_line.split(': ')[1])
+            # Extract the display name
+            display_name = display_name_line.split(': ')[1].replace('"', '')
+
+            label_map[id_] = display_name
+    return label_map
+
 if __name__ == '__main__':
+
+    #Label map for Id
+    label_map = load_label_map(Path_to_pptxt)
+
+    print(label_map)
 
     # Load the Tensorflow model into memory.
     detection_graph = tf.Graph()
@@ -56,13 +78,15 @@ if __name__ == '__main__':
     H = 720
 
     for idx in range(int(num)):
+        class_id = int(classes[0, idx])
         class_ = classes[0,idx]
         score = scores[0,idx]
         box = boxes[0,idx]
 
         if class_ not in colors_hash:
-            colors_hash[class_] = tuple(np.random.choice(range(256), size=3))
+            colors_hash[class_id] = tuple(np.random.choice(range(256), size=3))
         if score > 0.8:
+            class_name = label_map.get(class_id, 'N/A')
             left = box[1] * W
             top = box[0] * H
             right = box[3] * W
@@ -74,8 +98,12 @@ if __name__ == '__main__':
             p1 = (int(bbox[0]), int(bbox[1]))
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
             # draw box
-            r, g, b = colors_hash[class_]
-            cv2.rectangle(color_image, p1, p2, (int(r), int(g), int(b)), 2, 1)
+            r, g, b = colors_hash[class_id]
+            cv2.rectangle(color_image, p1, p2, (int(r), int(g), int(b)), 2)
+
+            label = f'{class_name}: {score:.2f}'
+            cv2.putText(color_image, label, (p1[0], p1[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (int(r), int(g), int(b)), 2)
+
 
     # Display the image
     cv2.imshow('Detected Objects', color_image)

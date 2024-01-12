@@ -8,7 +8,6 @@ Path_to_cpth = "faster_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.
 
 Path_to_pptxt = "faster_rcnn_inception_v2_coco_2018_01_28/mscoco_label_map.pbtxt"
 
-
 def load_label_map(label_map_path):
     label_map = {}
     with open(label_map_path, 'r') as file:

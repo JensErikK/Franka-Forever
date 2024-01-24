@@ -51,13 +51,13 @@ def pickUp(robot, x, y):
 
     print(T_lift_world)
 
-    robot.goto_pose(T_lift_world, duration=2, use_impedance=False)
+    robot.goto_pose(T_lift_world, duration=5, use_impedance=False)
 
     robot.open_gripper()
 
-    robot.goto_pose(T_grasp_world, duration=2, use_impedance=False)
+    robot.goto_pose(T_grasp_world, duration=5, use_impedance=False)
     robot.close_gripper()
-    robot.reset_pose(duration=2)
+    robot.reset_pose(duration=5)
 
 
 def place(robot, x, y):
@@ -74,12 +74,12 @@ def place(robot, x, y):
 
     robot.goto_pose(T_grasp_world, use_impedance=False)
     robot.open_gripper()
-    robot.reset_pose(duration=2)
+    robot.reset_pose(duration=5)
 
 
 def pick_and_place(x_from, y_from, x_to, y_to):
     fa = FrankaArm()
-    fa.reset_pose(duration=2)
+    fa.reset_pose(duration=5)
     pickUp(fa, x_from, y_from)
     place(fa, x_to, y_to)
 

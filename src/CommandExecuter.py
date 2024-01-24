@@ -1,18 +1,19 @@
 
-from RobotControl import reset_pose
+from RobotControl import start_robot, reset_pose
 
 class CommandExecuter():
 
     def __init__(self) -> None:
+        self.robot = start_robot()
         pass
 
-    def Execute(self, command: str):
+    async def Execute(self, command: str):
             
         if command.lower() == "reset":
-            reset_pose()
+            await reset_pose(self.robot)
             return
         
-        self.Perform_detect_and_pick(command)
+        await self.Perform_detect_and_pick(command)
 
     def Perform_detect_and_pick(self, command: str):
         placeTarget = self.GetTargetFromCommand(command)
@@ -42,6 +43,14 @@ class CommandExecuter():
     
     def PickAndPlace(self, pickUpPos, placePos):
         return print(f"PickFrom: {pickUpPos}, PlaceTo: {placePos}")
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        print(exception_type or "")
+        print(exception_value or "")
+        print(exception_traceback or "")
 
 
 if __name__ == "__main__":

@@ -1,31 +1,33 @@
 
 from CommandExecuter import CommandExecuter
-from flask import Flask, render_template, session, request, url_for, flash, redirect
+from quart import Quart, render_template, session, request, url_for, flash, redirect
 
-app = Flask(__name__)
+app = Quart(__name__)
 app.secret_key = 'super secret key'
 
 @app.route('/')
-def index():
+async def index():
     return redirect(url_for('pick'))
 
 
 @app.route('/pick', methods=('GET', 'POST'))
-def pick():
+async def pick():
 
     if request.method != 'POST':
-        return render_template('pick.html')
+        return await render_template('pick.html')
     
-    if request.form['action'] == "Pick Everything":
+    form = await request.form
+
+    if form['action'] == "Pick Everything":
         print("Will Pick and Place all detected objects")
         return redirect(url_for('executing', command="Pick Everything"))
     
-    if request.form['action'] == "Reset":
+    if form['action'] == "Reset":
         print("Will Reset Robot to defautl pos")
         return redirect(url_for('executing', command="Reset"))
 
-    elif request.form['action'] == "Execute":
-        command = request.form['command']
+    elif form['action'] == "Execute":
+        command = form['command']
         print("Executing command: ")
         print(command)
         return redirect(url_for('executing', command=command))
@@ -35,17 +37,21 @@ def pick():
     
 
 @app.route('/executing', methods=('GET', 'POST'))
-def executing():
+async def executing():
 
     if request.method == 'GET':
         session['command'] = request.args['command']
-        return render_template('executing.html')
+        return await render_template('executing.html')
 
     command = session['command']
     if request.method == 'POST' and command:
         print("Executing: ")
         print(command)
-        CommandExecuter().Execute(command)
+        with CommandExecuter() as executer:
+            await executer.Execute(command)
     
     session['command'] = ""
     return redirect(url_for('pick'))
+
+if __name__ == "__main__":
+    app.run()

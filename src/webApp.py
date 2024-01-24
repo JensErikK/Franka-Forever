@@ -1,5 +1,5 @@
 
-import CommandExecuter
+from CommandExecuter import CommandExecuter
 from flask import Flask, render_template, session, request, url_for, flash, redirect
 
 app = Flask(__name__)
@@ -19,6 +19,10 @@ def pick():
     if request.form['action'] == "Pick Everything":
         print("Will Pick and Place all detected objects")
         return redirect(url_for('executing', command="Pick Everything"))
+    
+    if request.form['action'] == "Reset":
+        print("Will Reset Robot to defautl pos")
+        return redirect(url_for('executing', command="Reset"))
 
     elif request.form['action'] == "Execute":
         command = request.form['command']

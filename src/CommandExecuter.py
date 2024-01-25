@@ -1,5 +1,6 @@
 
-from RobotControl import start_robot, reset_pose
+from openai import OpenAI
+from RobotControl import start_robot, reset_pose, pick_left_bowl, pick_right_bowl, place, dance
 
 class CommandExecuter():
 
@@ -8,41 +9,50 @@ class CommandExecuter():
         pass
 
     async def Execute(self, command: str):
-            
+        
         if command.lower() == "reset":
             await reset_pose(self.robot)
             return
-        
-        await self.Perform_detect_and_pick(command)
 
-    def Perform_detect_and_pick(self, command: str):
-        placeTarget = self.GetTargetFromCommand(command)
-        objectTypesToPickup = self.GetObjectClassesToPickUp(command)
+        parsed_command = self.parse_command(command)
 
-        objectPositions = self.FindObjectsWithPositions()
+        print(parsed_command)
 
-
-        targetPosition = [t[1] for t in objectPositions if t[0] == placeTarget][0]
-        pickUpPositions = [t[1] for t in objectPositions if t[0] in objectTypesToPickup]
-
-        if not targetPosition:
+        if "stressball" in parsed_command.lower():
+            await pick_left_bowl(self.robot)
+            await place(self.robot)
             return
-
-        for position in pickUpPositions:
-            self.PickAndPlace(position, targetPosition)
-
-    def GetTargetFromCommand(self, command: str) -> str:
-        return "Bowl"
+        
+        if "candy" in parsed_command.lower():
+            await pick_right_bowl(self.robot)
+            await place(self.robot)
+            return
+        
+        await dance(self.robot)
     
-    def GetObjectClassesToPickUp(self, command: str):
-        return ["Sports Ball"]
-    
+    def parse_command(self, command: str) -> str:
+        client = OpenAI()
 
-    def FindObjectsWithPositions(self):
-        return [("Sports Ball", [1,2,3]), ("Bowl", [2,3,4])]
-    
-    def PickAndPlace(self, pickUpPos, placePos):
-        return print(f"PickFrom: {pickUpPos}, PlaceTo: {placePos}")
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system",\
+                "content": "You will be given a command. \
+                 Your task is to figure out if the command asks for a stress ball or candy. \
+                 Respond with \"StressBall\" if they want a stressball and \"Candy\" if they want candy. \
+                 If they are asking for something else tell them you cant give them what they are asking for."},
+                {"role": "user", "content": command}
+            ],
+            temperature=1,
+            max_tokens=256,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+
+        return response.choices[0].message.content
+
+
     
     def __enter__(self):
         return self

@@ -29,8 +29,6 @@ if __name__ == '__main__':
     #Label map for Id
     label_map = load_label_map(Path_to_pptxt)
 
-    print(label_map)
-
     # Load the Tensorflow model into memory.
     detection_graph = tf.Graph()
     with detection_graph.as_default():
@@ -41,7 +39,6 @@ if __name__ == '__main__':
             tf.compat.v1.import_graph_def(od_graph_def, name='')
         sess = tf.compat.v1.Session(graph=detection_graph)
 
-    
     # Input tensor is the image
     image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
     # Output tensors are the detection boxes, scores, and classes
@@ -104,7 +101,7 @@ if __name__ == '__main__':
 
         if class_ not in colors_hash:
             colors_hash[class_id] = tuple(np.random.choice(range(256), size=3))
-        if score > 0.8:
+        if score > 0.5:
             class_name = label_map.get(class_id, 'N/A')
             left = box[1] * W
             top = box[0] * H

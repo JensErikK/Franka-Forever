@@ -19,7 +19,7 @@ async def pick_left_bowl(fa: FrankaArm):
     
     T_delta_left_bowl = RigidTransform(
         rotation= np.eye(3),
-        translation= np.array([0, -0.25, -0.45]),
+        translation= np.array([0, -0.25, -0.40]),
         from_frame= 'world',
         to_frame= 'world'
     )
@@ -70,7 +70,7 @@ async def place(fa: FrankaArm):
 
     T_delta_left_bowl = RigidTransform(
         rotation= np.eye(3),
-        translation= np.array([0.20, 0, -0.30]),
+        translation= np.array([0.20, 0, -0.15]),
         from_frame= 'world',
         to_frame= 'world'
     )

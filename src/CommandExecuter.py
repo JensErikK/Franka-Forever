@@ -34,7 +34,7 @@ class CommandExecuter():
         client = OpenAI()
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[
                 {"role": "system",\
                 "content": "You will be given a command. \

@@ -34,13 +34,39 @@ async def pick_right_bowl(fa: FrankaArm):
     
     T_delta_left_bowl = RigidTransform(
         rotation= np.eye(3),
-        translation= np.array([0, 0.25, -0.45]),
+        translation= np.array([0, 0.25, -0.40]),
         from_frame= 'world',
         to_frame= 'world'
     )
 
     fa.goto_pose_delta(T_delta_left_bowl)
     fa.close_gripper()
+    fa.reset_pose()
+
+async def place_left_bowl(fa: FrankaArm):
+
+    T_delta_left_bowl = RigidTransform(
+        rotation= np.eye(3),
+        translation= np.array([0, -0.25, -0.35]),
+        from_frame= 'world',
+        to_frame= 'world'
+    )
+
+    fa.goto_pose_delta(T_delta_left_bowl)
+    fa.open_gripper()
+    fa.reset_pose()
+
+async def place_right_bowl(fa: FrankaArm):
+    
+    T_delta_left_bowl = RigidTransform(
+        rotation= np.eye(3),
+        translation= np.array([0, 0.25, -0.35]),
+        from_frame= 'world',
+        to_frame= 'world'
+    )
+
+    fa.goto_pose_delta(T_delta_left_bowl)
+    fa.open_gripper()
     fa.reset_pose()
 
 

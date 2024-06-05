@@ -1,20 +1,37 @@
 
 from openai import OpenAI
-from RobotControl import start_robot, reset_pose, pick_left_bowl, pick_right_bowl, place, dance
+from RobotControl import start_robot, reset_pose, pick_left_bowl, pick_right_bowl, place_left_bowl, place_right_bowl, place, dance
+from time import sleep
+
 
 class CommandExecuter():
 
-    def __init__(self) -> None:
-        self.robot = start_robot()
-        pass
+    IsLooping = False
+    isExecuting = False
 
+    def __init__(self) -> None:
+        if not CommandExecuter.IsExecuting:
+            self.robot = start_robot()
+        
     async def Execute(self, command: str):
+        if CommandExecuter.IsExecuting:
+            return
+
+        CommandExecuter.IsExecuting = True
+        await self._parseAndPerformCommand(command)
+        CommandExecuter.IsExecuting = False
+
+    async def _parseAndPerformCommand(self, command: str):
         
         if command.lower() == "reset":
             await reset_pose(self.robot)
             return
 
-        parsed_command = self.parse_command(command)
+        if command.lower() == "stand_loop":
+            await self._execute_loop()
+            return
+
+        parsed_command = self._parse_command(command)
 
         print(parsed_command)
 
@@ -30,7 +47,7 @@ class CommandExecuter():
         
         await dance(self.robot)
     
-    def parse_command(self, command: str) -> str:
+    def _parse_command(self, command: str) -> str:
         client = OpenAI()
 
         response = client.chat.completions.create(
@@ -52,6 +69,24 @@ class CommandExecuter():
 
         return response.choices[0].message.content
 
+
+    async def _execute_loop(self):
+        CommandExecuter.IsLooping = True
+        num_pick_before_switch = 2
+
+        while CommandExecuter.IsLooping:
+            for i in range(2*num_pick_before_switch):
+                if i < num_pick_before_switch:    
+                    await pick_left_bowl(self.robot)
+                    await place_right_bowl(self.robot)
+                else:
+                    await pick_left_bowl(self.robot)
+                    await place_right_bowl(self.robot)
+                if not CommandExecuter.IsLooping:
+                    break
+
+        await reset_pose(self.robot)
+        return
 
     
     def __enter__(self):

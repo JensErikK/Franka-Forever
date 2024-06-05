@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>CP3K</title>
+    <style>
+      #commandInput {
+          display: none;
+      }
+      #executing {
+          display: none;
+      }
+    </style>
+    <script>
+
+        async function initiateExecutionStop(){
+            const response = await fetch('/stop');
+            const data = await response.json();
+
+            document.getElementById('stopMessage').innerText = 'Robot will stop after current task';
+            document.getElementById('abortButton').style.display = 'none';
+
+            console.log(data.message);
+        }
+
+        async function execute(command) {
+
+            if (!command){
+              console.log("No command to execute")
+              checkStatus()
+              return
+            }
+
+            document.getElementById('commandInput').style.display = 'none';
+            document.getElementById('executing').style.display = 'block';
+            document.getElementById('abortButton').style.display = 'block';
+
+            const encodedCommand = encodeURIComponent(command);
+            const response = await fetch('/execute?command=' + encodedCommand);
+            const data = await response.json();
+            console.log(data.message);
+            checkStatus();
+        }
+
+        async function checkStatus() {
+            const response = await fetch('/executionstatus');
+            const status = await response.json();
+            console.log(status)
+
+            if (status.running) {
+                document.getElementById('commandInput').style.display = 'none';
+                document.getElementById('executing').style.display = 'block';
+                setTimeout(checkStatus, 1000); // Check status every second
+            } else {
+                document.getElementById('commandInput').style.display = 'block';
+                document.getElementById('executing').style.display = 'none';
+                document.getElementById('stopMessage').innerText = '';
+            }
+        }
+
+        async function executeInputCommand(){
+            commandField = document.getElementById('commandTxt');
+            command = commandField.value;
+            console.log("Execute command: " + command)
+
+            await execute(command);
+
+            commandField.value = '';
+        }
+
+        window.onload = function() {
+          checkStatus();
+        };
+
+    </script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <a class="navbar-brand" href="{{ url_for('index')}}">Picker</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+    <div class="container">
+      <div id="commandInput">
+
+        <div class="d-flex justify-content-center flex-column" style="align-items: center; margin: 25px;">
+          <p class="h1">Candy Picker 3000</p>
+        </div>
+        <div class="form-group">
+          <input type:="text" id="commandTxt" placeholder="Robot Command" class="form-control"></input>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary" style="background-color: #ba132f; border-color: #ba132f;" onclick="executeInputCommand()">Execute</button>
+          <button class="btn btn-primary" style="background-color: #ba132f; border-color: #ba132f;" onclick="execute('Reset')">Reset Robot Position</button>
+          <button class="btn btn-primary" style="background-color: #ba132f; border-color: #ba132f;" onclick="execute('show_loop')">Loop</button>
+        </div>
+      </div>
+      <div id="executing">
+        <div class="d-flex justify-content-center flex-column" style="align-items: center;margin: 25px;">
+          <p class="h1">Executing</p>
+      
+          <div class="spinner-border text-danger m-5" style="width: 5rem; height: 5rem;">
+              <span class="sr-only">Loading...</span>
+          </div>
+          
+          <button id="abortButton" class="btn btn-primary" style="background-color: #ba132f; border-color: #ba132f;" onclick="initiateExecutionStop()">Abort</button>
+          <p class="h3" id="stopMessage"></p>
+        </div>
+      </div>
+
+      <img src="https://easyfairsassets.com/sites/84/2022/02/Element-Logic-logo-red-hires-1.jpg" style="width: 100%; padding-top: 50px;"></img>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>

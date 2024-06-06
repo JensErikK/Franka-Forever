@@ -1,7 +1,7 @@
 
 from openai import OpenAI
 from RobotControl import start_robot, reset_pose, pick_left_bowl, pick_right_bowl, place_left_bowl, place_right_bowl, place, dance
-
+from random import random
 
 class CommandExecuter():
         
@@ -39,55 +39,48 @@ class CommandExecuter():
             await place(self.robot)
             return
         
-        if "candy" in parsed_command.lower():
+        elif "candy" in parsed_command.lower():
             await pick_right_bowl(self.robot)
             await place(self.robot)
             return
         
+        elif "random" in parsed_command.lower():
+            if random() <.5:
+                await pick_left_bowl(self.robot)
+                await place(self.robot)
+                return
+            else:
+                await pick_right_bowl(self.robot)
+                await place(self.robot)
+                return
+        
         await dance(self.robot)
+        return 
     
     def _parse_command(self, command: str) -> str:
-        client = OpenAI()
+        try:
+            client = OpenAI()
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system",\
+                    "content": "You will be given a command. \
+                    Your task is to figure out if the command asks for a stress ball or candy. \
+                    Respond with \"StressBall\" if they want a stressball and \"Candy\" if they want candy. \
+                    If they are asking for something else tell them you cant give them what they are asking for."},
+                    {"role": "user", "content": command}
+                ],
+                temperature=1,
+                max_tokens=256,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
 
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system",\
-                "content": "You will be given a command. \
-                 Your task is to figure out if the command asks for a stress ball or candy. \
-                 Respond with \"StressBall\" if they want a stressball and \"Candy\" if they want candy. \
-                 If they are asking for something else tell them you cant give them what they are asking for."},
-                {"role": "user", "content": command}
-            ],
-            temperature=1,
-            max_tokens=256,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
+            return response.choices[0].message.content
+        except:
+            return "random"
 
-        return response.choices[0].message.content
-
-
-    # async def _execute_loop(self):
-    #     CommandExecuter.IsLooping = True
-    #     num_pick_before_switch = 2
-
-    #     while CommandExecuter.IsLooping:
-    #         for i in range(2*num_pick_before_switch):
-    #             if i < num_pick_before_switch:    
-    #                 await pick_left_bowl(self.robot)
-    #                 await place_right_bowl(self.robot)
-    #             else:
-    #                 await pick_left_bowl(self.robot)
-    #                 await place_right_bowl(self.robot)
-    #             if not CommandExecuter.IsLooping:
-    #                 break
-
-    #     await reset_pose(self.robot)
-    #     return
-
-    
     def __enter__(self):
         return self
     

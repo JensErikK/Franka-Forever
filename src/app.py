@@ -1,5 +1,5 @@
 
-from CommandExecuter import CommandExecuter
+from RobotCommander import RobotCommander
 from quart import Quart, render_template, jsonify, request
 from threading import Thread
 import asyncio
@@ -23,15 +23,15 @@ async def execute():
 
 @app.route('/executionstatus', methods=['GET'])
 async def status():
-    return jsonify({"running": CommandExecuter.IsExecuting})
+    return jsonify({"running": RobotCommander.IsExecuting})
 
 @app.route('/stop', methods=['GET'])
 async def stopLoop():
-    CommandExecuter.IsLooping = False
+    RobotCommander.IsLooping = False
     return jsonify({"message": "Execution loop will stop"})
     
 async def execute_on_robot(command: str):
-    with CommandExecuter() as executer:
+    with RobotCommander() as executer:
         await executer.Execute(command)
     return "Finished"
 

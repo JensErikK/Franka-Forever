@@ -4,30 +4,23 @@ from RobotControl import start_robot, reset_pose, pick_left_bowl, pick_right_bow
 
 
 class CommandExecuter():
-
-    IsLooping = False
-    IsExecuting = False
-
-    def __init__(self) -> None:
-        if not CommandExecuter.IsExecuting:
-            self.robot = start_robot()
         
     async def Execute(self, command: str):
-        if CommandExecuter.IsExecuting:
-            return
-
-        CommandExecuter.IsExecuting = True
+        self.robot = start_robot()
+        print(f"Executing {command}")
         await self._parseAndPerformCommand(command)
-        CommandExecuter.IsExecuting = False
     
     async def ExecuteLoopStep(self, step: int):
+        self.robot = start_robot()
+
+        print(f"Executing loop step: {step}")
         num_pick_before_switch = 2
         if step % (2*num_pick_before_switch) < num_pick_before_switch:    
-            await pick_left_bowl(self.robot)
+            await pick_left_bowl(self.robot, False)
             await place_right_bowl(self.robot)
         else:
-            await pick_left_bowl(self.robot)
-            await place_right_bowl(self.robot)
+            await pick_right_bowl(self.robot, False)
+            await place_left_bowl(self.robot)
 
         return
 
@@ -35,10 +28,6 @@ class CommandExecuter():
         
         if command.lower() == "reset":
             await reset_pose(self.robot)
-            return
-
-        if command.lower() == "stand_loop":
-            await self._execute_loop()
             return
 
         parsed_command = self._parse_command(command)

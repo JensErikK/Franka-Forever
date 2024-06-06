@@ -1,25 +1,25 @@
 
 from CommandExecuter import CommandExecuter
-from flask import Flask, jsonify, request
+from quart import Quart, jsonify, request
 
 
-app = Flask(__name__)
+app = Quart(__name__)
 app.secret_key = 'super secret key'
 
 @app.route('/execute', methods=['GET'])
 async def execute():
 
-    command = request.args.get('command')
-
     with CommandExecuter() as executer:
+        command = request.args.get('command')
+        print(f"Command: {command}")
         await executer.Execute(command)
 
-    return jsonify({"message": f"Command execution complete with command: {command}"})
+        return jsonify({"message": f"Command execution complete with command: {command}"})
 
 @app.route('/executeloop', methods=['GET'])
 async def executeLoop():
 
-    step = request.args.get('step')
+    step = int(request.args.get('step'))
 
     with CommandExecuter() as executer:
         await executer.ExecuteLoopStep(step)

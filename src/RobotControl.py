@@ -12,10 +12,15 @@ async def reset_pose(fa: FrankaArm):
     fa.reset_joints()
     fa.open_gripper()
 
+async def open_gripper(fa: FrankaArm):
+    fa.open_gripper()
 
-async def pick_left_bowl(fa: FrankaArm):
+async def pick_left_bowl(fa: FrankaArm, reset_before_pick=True):
 
-    await reset_pose(fa)
+    if (reset_before_pick):
+        await reset_pose(fa)
+    else:
+        await open_gripper(fa)
     
     T_delta_left_bowl = RigidTransform(
         rotation= np.eye(3),
@@ -28,9 +33,12 @@ async def pick_left_bowl(fa: FrankaArm):
     fa.close_gripper()
     fa.reset_pose()
 
-async def pick_right_bowl(fa: FrankaArm):
+async def pick_right_bowl(fa: FrankaArm, reset_before_pick=True):
 
-    await reset_pose(fa)
+    if (reset_before_pick):
+        await reset_pose(fa)
+    else:
+        await open_gripper(fa)
     
     T_delta_left_bowl = RigidTransform(
         rotation= np.eye(3),
